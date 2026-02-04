@@ -35,10 +35,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ text });
     } catch (error: any) {
         console.error('Chat API Error:', error);
-        // Provide a clearer error message for the user
-        const errorMessage = error.message?.includes('API_KEY_INVALID')
-            ? '유효하지 않은 API 키입니다.'
-            : 'AI 연결에 실패했습니다. (Vercel 로그를 확인해주세요)';
-        return NextResponse.json({ error: errorMessage }, { status: 500 });
+        // Debug: Return actual error message to help identify the root cause
+        return NextResponse.json({
+            error: `서버 에러: ${error.message || '알 수 없는 오류'}`
+        }, { status: 500 });
     }
 }
