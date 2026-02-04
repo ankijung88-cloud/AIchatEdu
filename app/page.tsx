@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Settings, User, Bot, Menu } from 'lucide-react';
+import { Send, Settings, User, Bot, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import SettingsModal from './components/SettingsModal';
 import { PERSONAS } from '@/lib/personas';
 
@@ -16,7 +16,10 @@ export default function Home() {
     const [isLoading, setIsLoading] = useState(false);
     const [mode, setMode] = useState('friend');
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isListening, setIsListening] = useState(false);
+    const [isAutoSpeakEnabled, setIsAutoSpeakEnabled] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const recognitionRef = useRef<any>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -26,16 +29,72 @@ export default function Home() {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return;
+    // Initialize Speech Recognition
+    useEffect(() => {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+            recognitionRef.current = new SpeechRecognition();
+            recognitionRef.current.continuous = false;
+            recognitionRef.current.interimResults = false;
+            recognitionRef.current.lang = 'ko-KR';
 
-        const userMessage = input;
+            recognitionRef.current.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                setInput(transcript);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onerror = (event: any) => {
+                console.error('Speech Recognition Error:', event.error);
+                setIsListening(false);
+            };
+
+            recognitionRef.current.onend = () => {
+                setIsListening(false);
+            };
+        }
+    }, []);
+
+    const toggleListening = () => {
+        if (isListening) {
+            recognitionRef.current?.stop();
+            setIsListening(false);
+        } else {
+            recognitionRef.current?.start();
+            setIsListening(true);
+        }
+    };
+
+    const speakText = (text: string) => {
+        if (!isAutoSpeakEnabled) return;
+
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ko-KR';
+
+        // Find a natural sounding voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v => v.lang === 'ko-KR' && v.name.includes('Natural')) ||
+            voices.find(v => v.lang === 'ko-KR');
+
+        if (preferredVoice) {
+            utterance.voice = preferredVoice;
+        }
+
+        window.speechSynthesis.speak(utterance);
+    };
+
+    const handleSend = async (overrideInput?: string) => {
+        const messageToSend = overrideInput !== undefined ? overrideInput : input;
+        if (!messageToSend.trim() || isLoading) return;
+
         setInput('');
-        setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+        setMessages(prev => [...prev, { role: 'user', text: messageToSend }]);
         setIsLoading(true);
 
         try {
-            // Prepare history for Gemini (excluding the last message we just sent)
             const history = messages.map(m => ({
                 role: m.role,
                 parts: [{ text: m.text }]
@@ -45,7 +104,7 @@ export default function Home() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    message: userMessage,
+                    message: messageToSend,
                     history: history,
                     mode: mode
                 }),
@@ -58,6 +117,9 @@ export default function Home() {
             }
 
             setMessages(prev => [...prev, { role: 'model', text: data.text }]);
+
+            // Auto-speak the AI response
+            speakText(data.text);
         } catch (error) {
             console.error(error);
             setMessages(prev => [...prev, { role: 'model', text: "Error: Could not connect to the AI. Please try again." }]);
@@ -97,12 +159,21 @@ export default function Home() {
                         <p className="text-xs text-gray-300">Secure AI Chat</p>
                     </div>
                 </div>
-                <button
-                    onClick={() => setIsSettingsOpen(true)}
-                    className="p-2 hover:bg-white/10 rounded-full text-white transition-colors"
-                >
-                    <Settings size={24} />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setIsAutoSpeakEnabled(!isAutoSpeakEnabled)}
+                        className={`p-2 rounded-full transition-colors ${isAutoSpeakEnabled ? 'text-white hover:bg-white/10' : 'text-gray-500 hover:bg-white/5'}`}
+                        title={isAutoSpeakEnabled ? "Auto-speak ON" : "Auto-speak OFF"}
+                    >
+                        {isAutoSpeakEnabled ? <Volume2 size={24} /> : <VolumeX size={24} />}
+                    </button>
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="p-2 hover:bg-white/10 rounded-full text-white transition-colors"
+                    >
+                        <Settings size={24} />
+                    </button>
+                </div>
             </header>
 
             {/* Chat Area */}
@@ -128,7 +199,7 @@ export default function Home() {
                     </div>
                 ))}
                 {isLoading && (
-                    <div className="flex justify-start">
+                    <div className="justify-start flex animate-in fade-in slide-in-from-bottom-2">
                         <div className="bg-black/40 p-3 rounded-2xl rounded-tl-none border border-white/5 flex gap-2">
                             <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce"></span>
                             <span className="w-2 h-2 bg-white/50 rounded-full animate-bounce delay-75"></span>
@@ -140,17 +211,27 @@ export default function Home() {
             </div>
 
             {/* Input Area */}
-            <div className="w-full max-w-2xl glass-panel p-2 flex items-end gap-2 z-10">
+            <div className="w-full max-w-2xl glass-panel p-2 flex items-end gap-2 z-10 bottom-padding-safe">
+                <button
+                    onClick={toggleListening}
+                    className={`p-3 rounded-xl transition-all ${isListening
+                            ? 'bg-red-500 text-white animate-pulse'
+                            : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        }`}
+                    title={isListening ? "Listening..." : "Click to speak"}
+                >
+                    {isListening ? <Mic size={20} /> : <MicOff size={20} />}
+                </button>
                 <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Type a message..."
+                    placeholder={isListening ? "Listening..." : "Type or speak message..."}
                     className="flex-1 bg-transparent text-white placeholder-gray-400 border-none outline-none resize-none p-3 max-h-32 focus:ring-0"
                     rows={1}
                 />
                 <button
-                    onClick={handleSend}
+                    onClick={() => handleSend()}
                     disabled={!input.trim() || isLoading}
                     className={`p-3 rounded-xl transition-all ${input.trim()
                         ? `${currentPersona.themeColor} text-white shadow-lg`
