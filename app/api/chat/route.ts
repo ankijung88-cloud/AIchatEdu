@@ -11,13 +11,13 @@ export async function POST(req: Request) {
         const persona = PERSONAS[mode] || PERSONAS.friend;
 
         const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            return NextResponse.json({ error: 'API Key not configured' }, { status: 500 });
+        if (!apiKey || apiKey === 'your-api-key-here') {
+            return NextResponse.json({ error: '인증 설정 오류: Vercel 환경 변수에 API 키를 등록해주세요.' }, { status: 500 });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash",
+            model: "gemini-1.5-flash", // More stable and widely available version
             systemInstruction: persona.systemInstruction
         });
 
@@ -33,8 +33,12 @@ export async function POST(req: Request) {
         const text = response.text();
 
         return NextResponse.json({ text });
-    } catch (error) {
+    } catch (error: any) {
         console.error('Chat API Error:', error);
-        return NextResponse.json({ error: 'Failed to process request' }, { status: 500 });
+        // Provide a clearer error message for the user
+        const errorMessage = error.message?.includes('API_KEY_INVALID')
+            ? '유효하지 않은 API 키입니다.'
+            : 'AI 연결에 실패했습니다. (Vercel 로그를 확인해주세요)';
+        return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
 }
