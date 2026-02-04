@@ -141,9 +141,10 @@ export default function Home() {
 
             // Auto-speak the AI response
             speakText(data.text);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setMessages(prev => [...prev, { role: 'model', text: "Error: Could not connect to the AI. Please try again." }]);
+            const displayError = error instanceof Error ? error.message : "AI 연결에 실패했습니다. 네트워크 상태나 API 설정을 확인해주세요.";
+            setMessages(prev => [...prev, { role: 'model', text: `Error: ${displayError}` }]);
         } finally {
             setIsLoading(false);
         }
