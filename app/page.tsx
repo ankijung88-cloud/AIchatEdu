@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Settings, User, Bot, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Send, Settings, User, Bot, Mic, MicOff, Volume2, VolumeX, Heart, School } from 'lucide-react';
 import SettingsModal from './components/SettingsModal';
 import { PERSONAS } from '@/lib/personas';
 
@@ -172,8 +172,8 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-full ${currentPersona.themeColor} text-white`}>
                         {mode === 'friend' ? <User size={20} /> :
-                            mode === 'lover' ? <Settings size={20} /> :
-                                mode === 'teacher' ? <Bot size={20} /> : <Bot size={20} />}
+                            mode === 'lover' ? <Heart size={20} /> :
+                                mode === 'teacher' ? <School size={20} /> : <Bot size={20} />}
                     </div>
                     <div>
                         <h1 className="font-bold text-white text-lg">{currentPersona.name}</h1>

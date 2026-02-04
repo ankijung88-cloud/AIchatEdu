@@ -32,8 +32,8 @@ export default function SettingsModal({ isOpen, onClose, currentMode, onSelectMo
                                 onClose();
                             }}
                             className={`w-full p-4 rounded-xl flex items-center justify-between transition-all duration-200 border border-white/10 ${currentMode === persona.id
-                                    ? `${persona.themeColor} border-transparent shadow-lg scale-[1.02]`
-                                    : 'hover:bg-white/5 hover:border-white/30'
+                                ? `${persona.themeColor} border-transparent shadow-lg scale-[1.02]`
+                                : 'hover:bg-white/5 hover:border-white/30'
                                 }`}
                         >
                             <div className="flex items-center gap-3">
@@ -41,9 +41,10 @@ export default function SettingsModal({ isOpen, onClose, currentMode, onSelectMo
                                 <div className="flex flex-col items-start">
                                     <span className="font-bold text-lg">{persona.name}</span>
                                     <span className="text-xs opacity-70">
-                                        {persona.id === 'friend' && 'Cheerful & Casual'}
-                                        {persona.id === 'lover' && 'Warm & Loving'}
-                                        {persona.id === 'assistant' && 'Professional'}
+                                        {persona.id === 'friend' && 'Cheerful & Casual (친근한 반말)'}
+                                        {persona.id === 'lover' && 'Warm & Loving (달달한 반말)'}
+                                        {persona.id === 'assistant' && 'Professional (정중한 존댓말)'}
+                                        {persona.id === 'teacher' && 'Interactive Tutor (한국어 학습)'}
                                     </span>
                                 </div>
                             </div>
