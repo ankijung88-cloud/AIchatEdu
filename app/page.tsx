@@ -65,6 +65,27 @@ export default function Home() {
         }
     };
 
+    // Handle Mode Change (Clear history and greet)
+    const handleModeChange = (newMode: string) => {
+        if (newMode === mode) return;
+
+        setMode(newMode);
+        setMessages([]); // Clear previous conversation context
+        setIsSettingsOpen(false);
+
+        // Immediate greeting from the new persona
+        const greetings: Record<string, string> = {
+            friend: "안녕! 나 왔어. 오늘 하루 어땠어?",
+            lover: "자기야, 보고 싶었어! 지금 뭐하고 있어? ❤️",
+            assistant: "안녕하세요. 무엇을 도와드릴까요?",
+            teacher: "안녕하세요! 오늘도 즐겁게 한국어를 배워볼까요? 궁금한 게 있으면 언제든 물어보세요. 🎓"
+        };
+
+        const greetingText = greetings[newMode] || "안녕하세요!";
+        setMessages([{ role: 'model', text: greetingText }]);
+        speakText(greetingText);
+    };
+
     const speakText = (text: string) => {
         if (!isAutoSpeakEnabled) return;
 
@@ -215,8 +236,8 @@ export default function Home() {
                 <button
                     onClick={toggleListening}
                     className={`p-3 rounded-xl transition-all ${isListening
-                            ? 'bg-red-500 text-white animate-pulse'
-                            : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                        ? 'bg-red-500 text-white animate-pulse'
+                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
                         }`}
                     title={isListening ? "Listening..." : "Click to speak"}
                 >
@@ -246,7 +267,7 @@ export default function Home() {
                 isOpen={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
                 currentMode={mode}
-                onSelectMode={setMode}
+                onSelectMode={handleModeChange}
             />
         </main>
     );
