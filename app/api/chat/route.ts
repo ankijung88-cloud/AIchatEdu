@@ -17,12 +17,21 @@ export async function POST(req: Request) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash", // More stable and widely available version
-            systemInstruction: persona.systemInstruction
+            model: "gemini-pro", // Maximum compatibility
         });
 
+        // Inject system instruction into history for better compatibility across SDK versions
+        const systemMessage = {
+            role: 'user',
+            parts: [{ text: `이 대화에서 당신의 역할과 규칙입니다: ${persona.systemInstruction}` }]
+        };
+        const systemAcknowledge = {
+            role: 'model',
+            parts: [{ text: "알겠습니다. 요청하신 페르소나와 규칙에 따라 대화를 진행하겠습니다." }]
+        };
+
         const chat = model.startChat({
-            history: history || [],
+            history: [systemMessage, systemAcknowledge, ...(history || [])],
             generationConfig: {
                 maxOutputTokens: 1000,
             },
