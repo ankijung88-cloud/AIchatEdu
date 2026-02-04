@@ -79,7 +79,8 @@ export default function Home() {
         <main className="min-h-screen flex flex-col items-center justify-between p-4 md:p-8 relative overflow-hidden transition-colors duration-500">
             {/* Dynamic Background Overlay based on Persona */}
             <div className={`fixed inset-0 -z-10 opacity-20 bg-gradient-to-br from-gray-900 to-black ${mode === 'friend' ? 'from-blue-900 via-purple-900 to-black' :
-                    mode === 'lover' ? 'from-pink-900 via-red-900 to-black' :
+                mode === 'lover' ? 'from-pink-900 via-red-900 to-black' :
+                    mode === 'teacher' ? 'from-green-900 via-emerald-900 to-black' :
                         'from-gray-900 to-black'
                 }`} />
 
@@ -88,7 +89,8 @@ export default function Home() {
                 <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-full ${currentPersona.themeColor} text-white`}>
                         {mode === 'friend' ? <User size={20} /> :
-                            mode === 'lover' ? <Settings size={20} /> : <Bot size={20} />}
+                            mode === 'lover' ? <Settings size={20} /> :
+                                mode === 'teacher' ? <Bot size={20} /> : <Bot size={20} />}
                     </div>
                     <div>
                         <h1 className="font-bold text-white text-lg">{currentPersona.name}</h1>
@@ -118,8 +120,8 @@ export default function Home() {
                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                         <div className={`max-w-[80%] p-3 rounded-2xl ${msg.role === 'user'
-                                ? 'bg-white/20 text-white rounded-tr-none'
-                                : 'bg-black/40 text-gray-100 rounded-tl-none border border-white/5'
+                            ? 'bg-white/20 text-white rounded-tr-none'
+                            : 'bg-black/40 text-gray-100 rounded-tl-none border border-white/5'
                             }`}>
                             {msg.text}
                         </div>
@@ -151,8 +153,8 @@ export default function Home() {
                     onClick={handleSend}
                     disabled={!input.trim() || isLoading}
                     className={`p-3 rounded-xl transition-all ${input.trim()
-                            ? `${currentPersona.themeColor} text-white shadow-lg`
-                            : 'bg-white/5 text-gray-500 cursor-not-allowed'
+                        ? `${currentPersona.themeColor} text-white shadow-lg`
+                        : 'bg-white/5 text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     <Send size={20} />
