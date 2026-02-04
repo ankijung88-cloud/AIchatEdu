@@ -17,9 +17,9 @@ export async function POST(req: Request) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
-        // Use gemini-1.5-flash-latest which is highly available
+        // Use gemini-2.0-flash which was confirmed present in the user's model list
         const model = genAI.getGenerativeModel({
-            model: "gemini-1.5-flash-latest",
+            model: "gemini-2.0-flash",
         });
 
         // Inject system instruction into history for compatibility
@@ -46,20 +46,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ text });
     } catch (error: any) {
         console.error('Chat API Error:', error);
-
-        // Diagnostic: Try to list models if 404
-        let additionalInfo = "";
-        try {
-            const listResp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${process.env.GEMINI_API_KEY}`);
-            const listData = await listResp.json();
-            const modelNames = listData.models?.map((m: any) => m.name.split('/').pop()).join(', ') || "None found";
-            additionalInfo = `\n(Available models: ${modelNames})`;
-        } catch (diagError) {
-            additionalInfo = "\n(Could not list models)";
-        }
-
         return NextResponse.json({
-            error: `서버 에러: ${error.message || '알 수 없는 오류'}${additionalInfo}`
+            error: `서버 에러: ${error.message || '알 수 없는 오류'}`
         }, { status: 500 });
     }
 }
